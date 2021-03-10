@@ -1,0 +1,21 @@
+sudo: required
+services: 
+  - docker 
+
+before_install:
+  - docker build -t sanjasutic/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run sanjasutic/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t sanjasutic/multi-client ./client
+  - docker build -t sanjasutic/multi-nginx ./nginx
+  - docker build -t sanjasutic/multi-server ./server
+  - docker build -t sanjasutic/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push sanjasutic/multi-client
+  - docker push sanjasutic/multi-nginx
+  - docker push sanjasutic/multi-server
+  - docker push sanjasutic/multi-worker
